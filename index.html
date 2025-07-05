@@ -503,11 +503,11 @@
                     </div>
                     <div class="input-group">
                         <label for="fat">Fat Percentage</label>
-                        <input type="number" id="fat" step="0.1" min="3.2" max="9.5" placeholder="3.2 - 9.5">
+                        <input type="number" id="fat" step="0.1" min="2.0" max="9.5" placeholder="2.0 - 9.5">
                     </div>
                     <div class="input-group">
                         <label for="snf">SNF Percentage</label>
-                        <input type="number" id="snf" step="0.1" min="7.5" max="9.0" placeholder="7.5 - 9.0">
+                        <input type="number" id="snf" step="0.1" min="6.0" max="9.0" placeholder="6.0 - 9.0">
                     </div>
                 </div>
                 <button class="btn btn-primary" onclick="addCustomer()">
@@ -619,6 +619,11 @@
         }
 
         function calculateRate(fat, snf) {
+            // If FAT is below 3.2 OR SNF is below 7.5, set price to ₹30
+            if (fat < 3.2 || snf < 7.5) {
+                return 30.00;
+            }
+            
             const baseValues = {
                 '3.20_7.50': 31.34,
                 '3.20_7.60': 31.60,
@@ -665,13 +670,13 @@
                 return;
             }
             
-            if (isNaN(fat) || fat < 3.2 || fat > 9.5) {
-                showToast('FAT percentage must be between 3.2 and 9.5', 'error');
+            if (isNaN(fat) || fat < 2.0 || fat > 9.5) {
+                showToast('FAT percentage must be between 2.0 and 9.5', 'error');
                 return;
             }
             
-            if (isNaN(snf) || snf < 7.5 || snf > 9.0) {
-                showToast('SNF percentage must be between 7.5 and 9.0', 'error');
+            if (isNaN(snf) || snf < 6.0 || snf > 9.0) {
+                showToast('SNF percentage must be between 6.0 and 9.0', 'error');
                 return;
             }
             
