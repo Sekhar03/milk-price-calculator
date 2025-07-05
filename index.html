@@ -441,7 +441,10 @@
                         <label for="customerCode">Customer Code</label>
                         <input type="text" id="customerCode" placeholder="Enter customer code">
                     </div>
-
+                    <div class="input-group">
+                        <label for="liters">Milk Quantity (liters)</label>
+                        <input type="number" id="liters" step="0.01" min="0" placeholder="Enter quantity">
+                    </div>
                     <div class="input-group">
                         <label for="fat">Fat Percentage</label>
                         <input type="number" id="fat" step="0.1" min="3.2" max="9.5" placeholder="3.2 - 9.5">
@@ -480,8 +483,8 @@
                         <span class="stat-label">Total Customers</span>
                     </div>
                                     <div class="stat-item">
-                    <span class="stat-value" id="totalLiters">0</span>
-                    <span class="stat-label">Total Entries</span>
+                    <span class="stat-value" id="totalLiters">0.00</span>
+                    <span class="stat-label">Total Liters</span>
                 </div>
                     <div class="stat-item">
                         <span class="stat-value" id="totalAmount">₹0.00</span>
@@ -575,11 +578,17 @@
 
         function addCustomer() {
             const code = document.getElementById('customerCode').value.trim();
+            const liters = parseFloat(document.getElementById('liters').value);
             const fat = parseFloat(document.getElementById('fat').value);
             const snf = parseFloat(document.getElementById('snf').value);
             
             if (!code) {
                 showToast('Please enter customer code', 'error');
+                return;
+            }
+            
+            if (isNaN(liters) || liters <= 0) {
+                showToast('Please enter valid milk quantity', 'error');
                 return;
             }
             
@@ -594,14 +603,16 @@
             }
             
             const perLiterPrice = calculateRate(fat, snf);
+            const totalPrice = perLiterPrice * liters;
             
             const customer = {
                 serialNo: nextSerialNo++,
                 code: code,
+                liters: liters,
                 fat: fat,
                 snf: snf,
                 perLiterPrice: perLiterPrice,
-                totalPrice: perLiterPrice, // Since no quantity, total = price per liter
+                totalPrice: totalPrice,
                 date: new Date().toLocaleDateString()
             };
             
@@ -611,6 +622,7 @@
             
             // Clear form
             document.getElementById('customerCode').value = '';
+            document.getElementById('liters').value = '';
             document.getElementById('fat').value = '';
             document.getElementById('snf').value = '';
             
@@ -642,6 +654,7 @@
                         <tr>
                                                          <th>Serial No.</th>
                              <th>Customer Code</th>
+                             <th>Quantity (L)</th>
                              <th>FAT %</th>
                              <th>SNF %</th>
                              <th>Price/Liter</th>
@@ -659,6 +672,7 @@
                     <tr class="fade-in">
                         <td class="serial-no">${customer.serialNo}</td>
                         <td>${customer.code}</td>
+                        <td>${customer.liters.toFixed(2)}</td>
                         <td>${customer.fat.toFixed(1)}</td>
                         <td>${customer.snf.toFixed(1)}</td>
                         <td>₹${customer.perLiterPrice.toFixed(2)}</td>
@@ -674,7 +688,8 @@
             
             // Update summary
             document.getElementById('totalCustomers').textContent = customers.length;
-            document.getElementById('totalLiters').textContent = customers.length;
+            const totalLiters = customers.reduce((sum, c) => sum + c.liters, 0);
+            document.getElementById('totalLiters').textContent = totalLiters.toFixed(2);
             document.getElementById('totalAmount').textContent = `₹${totalAmount.toFixed(2)}`;
             summary.style.display = 'block';
         }
@@ -705,6 +720,7 @@
             const tableData = customers.map(customer => [
                 customer.serialNo,
                 customer.code,
+                customer.liters.toFixed(2),
                 customer.fat.toFixed(1),
                 customer.snf.toFixed(1),
                 `₹${customer.perLiterPrice.toFixed(2)}`,
@@ -714,7 +730,7 @@
             
             // Add table
             doc.autoTable({
-                head: [['Serial No.', 'Customer Code', 'FAT %', 'SNF %', 'Price/Liter', 'Total Amount', 'Date']],
+                head: [['Serial No.', 'Customer Code', 'Quantity (L)', 'FAT %', 'SNF %', 'Price/Liter', 'Total Amount', 'Date']],
                 body: tableData,
                 startY: 40,
                 styles: {
@@ -756,18 +772,21 @@
                 link.click();
                 
                 // Calculate totals
+                const totalLiters = customers.reduce((sum, c) => sum + c.liters, 0);
                 const totalAmount = customers.reduce((sum, c) => sum + c.totalPrice, 0);
                 
                 // Create detailed message with customer data
                 let message = `*Milk Collection Report*\n\n`;
                 message += `📊 *Summary:*\n`;
                 message += `• Total Customers: ${customers.length}\n`;
+                message += `• Total Liters: ${totalLiters.toFixed(2)} L\n`;
                 message += `• Total Amount: ₹${totalAmount.toFixed(2)}\n\n`;
                 message += `📅 Date: ${new Date().toLocaleDateString()}\n\n`;
                 message += `📋 *Customer Details:*\n`;
                 
                 customers.forEach(customer => {
                     message += `\n*${customer.serialNo}. ${customer.code}*\n`;
+                    message += `Quantity: ${customer.liters.toFixed(2)} L\n`;
                     message += `FAT: ${customer.fat.toFixed(1)}% | SNF: ${customer.snf.toFixed(1)}%\n`;
                     message += `Price/Liter: ₹${customer.perLiterPrice.toFixed(2)}\n`;
                     message += `Total: ₹${customer.totalPrice.toFixed(2)}\n`;
