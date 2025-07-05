@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Milk Price Calculator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+            margin-bottom: 30px;
+        }
+        .calculator {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+        label {
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        input {
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+        button {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 12px;
+            border-radius: 4px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #2980b9;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #e8f4fc;
+            border-radius: 4px;
+            display: none;
+        }
+        .result h2 {
+            margin-top: 0;
+            color: #2c3e50;
+        }
+        .result-value {
+            font-size: 18px;
+            font-weight: bold;
+            color: #27ae60;
+        }
+        .rate-chart {
+            margin-top: 40px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: center;
+        }
+        th {
+            background-color: #3498db;
+            color: white;
+        }
+        tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+        @media (max-width: 600px) {
+            .container {
+                padding: 15px;
+            }
+            input, button {
+                padding: 8px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Milk Price Calculator</h1>
+        
+        <div class="calculator">
+            <div class="input-group">
+                <label for="liters">Total Milk (liters):</label>
+                <input type="number" id="liters" step="0.01" min="0" placeholder="Enter quantity in liters">
+            </div>
+            
+            <div class="input-group">
+                <label for="fat">Fat Percentage:</label>
+                <input type="number" id="fat" step="0.1" min="3.2" max="9.5" placeholder="Enter FAT % (3.2-9.5)">
+            </div>
+            
+            <div class="input-group">
+                <label for="snf">SNF Percentage:</label>
+                <input type="number" id="snf" step="0.1" min="7.5" max="9.0" placeholder="Enter SNF % (7.5-9.0)">
+            </div>
+            
+            <button onclick="calculatePrice()">Calculate Price</button>
+            
+            <div class="result" id="result">
+                <h2>Calculation Results</h2>
+                <p>Price per liter: ₹<span class="result-value" id="perLiterPrice">0.00</span></p>
+                <p>Total price: ₹<span class="result-value" id="totalPrice">0.00</span></p>
+            </div>
+        </div>
+        
+        <div class="rate-chart">
+            <h2>Rate Calculation Reference</h2>
+            <p>Base rate calculation formula:</p>
+            <ul>
+                <li>Base rate (3.20% FAT, 7.50% SNF) = ₹31.34</li>
+                <li>FAT increment: ₹0.37 per 0.1% increase</li>
+                <li>SNF increment: ₹0.26 per 0.1% increase</li>
+            </ul>
+            
+            <h3>Example Rates</h3>
+            <table>
+                <tr>
+                    <th>FAT %</th>
+                    <th>SNF %</th>
+                    <th>Price/Liter</th>
+                </tr>
+                <tr>
+                    <td>3.20</td>
+                    <td>7.50</td>
+                    <td>₹31.34</td>
+                </tr>
+                <tr>
+                    <td>3.20</td>
+                    <td>7.60</td>
+                    <td>₹31.60</td>
+                </tr>
+                <tr>
+                    <td>6.40</td>
+                    <td>7.50</td>
+                    <td>₹43.68</td>
+                </tr>
+                <tr>
+                    <td>6.50</td>
+                    <td>7.50</td>
+                    <td>₹44.05</td>
+                </tr>
+                <tr>
+                    <td>6.40</td>
+                    <td>7.60</td>
+                    <td>₹43.94</td>
+                </tr>
+                <tr>
+                    <td>6.50</td>
+                    <td>7.70</td>
+                    <td>₹44.57</td>
+                </tr>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        function calculateRate(fat, snf) {
+            // Base known values
+            const baseValues = {
+                '3.20_7.50': 31.34,
+                '3.20_7.60': 31.60,
+                '3.30_7.50': 31.71,
+                '3.40_7.50': 32.08,
+                '6.40_7.50': 43.68,
+                '6.50_7.50': 44.05,
+                '6.40_7.60': 43.94,
+                '6.50_7.70': 44.57
+            };
+            
+            // Try to find exact match first
+            const key = `${fat.toFixed(1)}_${snf.toFixed(1)}`;
+            if (baseValues[key] !== undefined) {
+                return baseValues[key];
+            }
+            
+            // Calculate based on increments
+            const fatIncrement = 0.37; // Rs per 0.1% fat increase
+            const snfIncrement = 0.26; // Rs per 0.1% SNF increase
+            
+            // Use appropriate base point based on fat range
+            if (fat < 6.40) {
+                // Use 3.20/7.50 as base for lower fat values
+                const fatDiff = (fat - 3.20) / 0.1;
+                const snfDiff = (snf - 7.50) / 0.1;
+                return parseFloat((31.34 + (fatDiff * fatIncrement) + (snfDiff * snfIncrement)).toFixed(2));
+            } else {
+                // Use 6.40/7.50 as base for higher fat values
+                const fatDiff = (fat - 6.40) / 0.1;
+                const snfDiff = (snf - 7.50) / 0.1;
+                return parseFloat((43.68 + (fatDiff * fatIncrement) + (snfDiff * snfIncrement)).toFixed(2));
+            }
+        }
+
+        function calculatePrice() {
+            // Get input values
+            const liters = parseFloat(document.getElementById('liters').value);
+            const fat = parseFloat(document.getElementById('fat').value);
+            const snf = parseFloat(document.getElementById('snf').value);
+            
+            // Validate inputs
+            if (isNaN(liters) || isNaN(fat) || isNaN(snf)) {
+                alert('Please enter valid numbers for all fields');
+                return;
+            }
+            
+            if (fat < 3.2 || fat > 9.5) {
+                alert('FAT percentage must be between 3.2 and 9.5');
+                return;
+            }
+            
+            if (snf < 7.5 || snf > 9.0) {
+                alert('SNF percentage must be between 7.5 and 9.0');
+                return;
+            }
+            
+            // Calculate prices
+            const perLiterPrice = calculateRate(fat, snf);
+            const totalPrice = perLiterPrice * liters;
+            
+            // Display results
+            document.getElementById('perLiterPrice').textContent = perLiterPrice.toFixed(2);
+            document.getElementById('totalPrice').textContent = totalPrice.toFixed(2);
+            document.getElementById('result').style.display = 'block';
+        }
+    </script>
+</body>
+</html>
