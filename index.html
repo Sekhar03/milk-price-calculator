@@ -424,6 +424,62 @@
         .toast.show {
             transform: translateX(0);
         }
+
+        .price-display {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+            z-index: 2000;
+            text-align: center;
+            min-width: 300px;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .price-display.show {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .price-display h3 {
+            margin-bottom: 20px;
+            font-size: 1.5rem;
+            font-weight: 300;
+        }
+
+        .price-display .price-item {
+            margin: 15px 0;
+            padding: 15px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 10px;
+        }
+
+        .price-display .price-label {
+            font-size: 0.9rem;
+            opacity: 0.9;
+            margin-bottom: 5px;
+        }
+
+        .price-display .price-value {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: #fff;
+        }
+
+        .price-display .customer-info {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid rgba(255,255,255,0.2);
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
     </style>
 </head>
 <body>
@@ -505,6 +561,23 @@
     </div>
 
     <div class="toast" id="toast"></div>
+
+    <div class="price-display" id="priceDisplay">
+        <h3><i class="fas fa-calculator"></i> Price Calculation</h3>
+        <div class="price-item">
+            <div class="price-label">Price per Liter</div>
+            <div class="price-value" id="displayPerLiterPrice">₹0.00</div>
+        </div>
+        <div class="price-item">
+            <div class="price-label">Total Amount</div>
+            <div class="price-value" id="displayTotalPrice">₹0.00</div>
+        </div>
+        <div class="customer-info" id="displayCustomerInfo">
+            Customer: <span id="displayCustomerCode"></span><br>
+            Quantity: <span id="displayQuantity"></span> L<br>
+            FAT: <span id="displayFat"></span>% | SNF: <span id="displaySnf"></span>%
+        </div>
+    </div>
 
     <script>
         let customers = [];
@@ -620,6 +693,9 @@
             saveData();
             updateDisplay();
             
+            // Show price display for 20 seconds
+            showPriceDisplay(customer);
+            
             // Clear form
             document.getElementById('customerCode').value = '';
             document.getElementById('liters').value = '';
@@ -652,8 +728,7 @@
                 <table>
                     <thead>
                         <tr>
-                                                         <th>Serial No.</th>
-                             <th>Customer Code</th>
+                                                         <th>Customer Code</th>
                              <th>Quantity (L)</th>
                              <th>FAT %</th>
                              <th>SNF %</th>
@@ -670,14 +745,13 @@
             customers.forEach(customer => {
                 tableHTML += `
                     <tr class="fade-in">
-                        <td class="serial-no">${customer.serialNo}</td>
-                        <td>${customer.code}</td>
-                        <td>${customer.liters.toFixed(2)}</td>
-                        <td>${customer.fat.toFixed(1)}</td>
-                        <td>${customer.snf.toFixed(1)}</td>
-                        <td>₹${customer.perLiterPrice.toFixed(2)}</td>
-                        <td class="price">₹${customer.totalPrice.toFixed(2)}</td>
-                        <td>${customer.date}</td>
+                                                 <td>${customer.code}</td>
+                         <td>${customer.liters.toFixed(2)}</td>
+                         <td>${customer.fat.toFixed(1)}</td>
+                         <td>${customer.snf.toFixed(1)}</td>
+                         <td>₹${customer.perLiterPrice.toFixed(2)}</td>
+                         <td class="price">₹${customer.totalPrice.toFixed(2)}</td>
+                         <td>${customer.date}</td>
                     </tr>
                 `;
                 totalAmount += customer.totalPrice;
@@ -718,7 +792,6 @@
             
             // Prepare table data
             const tableData = customers.map(customer => [
-                customer.serialNo,
                 customer.code,
                 customer.liters.toFixed(2),
                 customer.fat.toFixed(1),
@@ -730,7 +803,7 @@
             
             // Add table
             doc.autoTable({
-                head: [['Serial No.', 'Customer Code', 'Quantity (L)', 'FAT %', 'SNF %', 'Price/Liter', 'Total Amount', 'Date']],
+                head: [['Customer Code', 'Quantity (L)', 'FAT %', 'SNF %', 'Price/Liter', 'Total Amount', 'Date']],
                 body: tableData,
                 startY: 40,
                 styles: {
@@ -804,6 +877,32 @@
                 showToast('Error generating PDF. Please try again.', 'error');
                 console.error('PDF generation error:', error);
             }
+        }
+
+        function showPriceDisplay(customer) {
+            const priceDisplay = document.getElementById('priceDisplay');
+            const perLiterPrice = document.getElementById('displayPerLiterPrice');
+            const totalPrice = document.getElementById('displayTotalPrice');
+            const customerCode = document.getElementById('displayCustomerCode');
+            const quantity = document.getElementById('displayQuantity');
+            const fat = document.getElementById('displayFat');
+            const snf = document.getElementById('displaySnf');
+            
+            // Update display values
+            perLiterPrice.textContent = `₹${customer.perLiterPrice.toFixed(2)}`;
+            totalPrice.textContent = `₹${customer.totalPrice.toFixed(2)}`;
+            customerCode.textContent = customer.code;
+            quantity.textContent = customer.liters.toFixed(2);
+            fat.textContent = customer.fat.toFixed(1);
+            snf.textContent = customer.snf.toFixed(1);
+            
+            // Show the display
+            priceDisplay.classList.add('show');
+            
+            // Hide after 20 seconds
+            setTimeout(() => {
+                priceDisplay.classList.remove('show');
+            }, 20000);
         }
 
         function showToast(message, type = 'success') {
